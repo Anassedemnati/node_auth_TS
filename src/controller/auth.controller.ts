@@ -2,7 +2,9 @@ import { User } from './../entity/user.entity';
 import { Request, Response } from "express";
 import { getRepository } from "typeorm";
 import bcryptjs from 'bcryptjs'
-import {sign} from 'jsonwebtoken'
+import {sign,verify} from 'jsonwebtoken'
+
+
 export const Register = async (req:Request,res:Response)=>{
     const body = req.body;
     if(body.password !== body.password_confirm){
@@ -11,7 +13,7 @@ export const Register = async (req:Request,res:Response)=>{
         message:"Password's do not match!"
        }) 
     }
-    const user = await getRepository(User).save({
+    const {password,...user} = await getRepository(User).save({
         first_name:body.first_name,
         last_name:body.last_name,
         email:body.email,
@@ -53,4 +55,42 @@ export const Login = async (req:Request,res:Response)=>{
     res.send({
        message:'success'
     });
+}
+
+export const AuthenticatedUser = async (req:Request,res:Response)=>{
+    try {
+    const cookie = req.cookies['accessToken'];
+       
+        
+    const payload:any = verify(cookie,process.env.ACCESS_SECRET || '');
+        
+    if (!payload) {
+        return res.status(401).send({
+            message:'Unauthenticated'
+        })
+    }
+
+    const user = await getRepository(User).findOne({
+        where:{
+            id:payload.id
+        }
+    });
+    
+    
+
+    if (!user) {
+        return res.status(401).send({
+            message:'Unauthenticated'
+        })
+    }
+    const {password,...data} = user;
+
+    res.send(data);
+
+    } catch (error) {
+        return res.status(401).send({
+            message:'Unauthenticated'
+        })
+    }
+
 }
