@@ -41,6 +41,7 @@ export const Login = async (req:Request,res:Response)=>{
     const accessToken = sign({
         id:user.id
     },process.env.ACCESS_SECRET || '',{expiresIn:'30s'});
+
     const refreshToken = sign({
         id:user.id
     },process.env.REFRESH_SECRET || '',{expiresIn:'1w'});
@@ -94,3 +95,40 @@ export const AuthenticatedUser = async (req:Request,res:Response)=>{
     }
 
 }
+
+
+export const Refresh = async (req:Request,res:Response) => {
+  try {
+    const cookie = req.cookies['refreshToken'];
+        
+    const payload:any = verify(cookie,process.env.REFRESH_SECRET || '');
+
+    if (!payload) {
+        return res.status(401).send({
+            message:'Unauthenticated'
+        })
+    }
+
+    const accessToken = sign({
+        id:payload.id
+    },process.env.ACCESS_SECRET || '',{expiresIn:'30s'});
+
+    res.cookie('accessToken',accessToken,{
+        httpOnly:true,//only get token in cookie by http
+        maxAge:24*60*60*1000//1 day
+    })
+
+    res.send({
+        message:'success'
+     });
+
+    
+  } catch (error) {
+    return res.status(401).send({
+        message:'Unauthenticated'
+    })
+  }  
+    
+
+}
+
