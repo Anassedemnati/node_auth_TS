@@ -38,10 +38,10 @@ export const Login = async (req:Request,res:Response)=>{
     }
     const accessToken = sign({
         id:user.id
-    },"access_secret",{expiresIn:'30s'});
+    },process.env.ACCESS_SECRET || '',{expiresIn:'30s'});
     const refreshToken = sign({
         id:user.id
-    },"refresh_secret",{expiresIn:'1w'});
+    },process.env.REFRESH_SECRET || '',{expiresIn:'1w'});
     res.cookie('accessToken',accessToken,{
         httpOnly:true,//only get token in cookie by http
         maxAge:24*60*60*1000//1 day
