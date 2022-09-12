@@ -2,6 +2,7 @@ import { User } from './../entity/user.entity';
 import { Request, Response } from "express";
 import { getRepository } from "typeorm";
 import bcryptjs from 'bcryptjs'
+import {sign} from 'jsonwebtoken'
 export const Register = async (req:Request,res:Response)=>{
     const body = req.body;
     if(body.password !== body.password_confirm){
@@ -35,5 +36,21 @@ export const Login = async (req:Request,res:Response)=>{
             message:'Invalide credentials'
         })
     }
-    res.send(user);
+    const accessToken = sign({
+        id:user.id
+    },"access_secret",{expiresIn:'30s'});
+    const refreshToken = sign({
+        id:user.id
+    },"refresh_secret",{expiresIn:'1w'});
+    res.cookie('accessToken',accessToken,{
+        httpOnly:true,//only get token in cookie by http
+        maxAge:24*60*60*1000//1 day
+    })
+    res.cookie('refreshToken',refreshToken,{
+        httpOnly:true,
+        maxAge: 7*24*60*60*1000//7 day
+    })
+    res.send({
+       message:'success'
+    });
 }
