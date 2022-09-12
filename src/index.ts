@@ -1,6 +1,8 @@
  import  express,{Request,Response}  from "express";
-
- const app = express();
+import { createConnection } from "typeorm";
+createConnection().then(()=>{
+    console.log("Connected to database");
+    const app = express();
 
  app.use(express.json());// for parsing application/json
 
@@ -12,3 +14,5 @@
     console.log('Server started on port 5000');
  }
 )
+})   
+ 
